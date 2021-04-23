@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+
 class Action(Enum):
     NORTH = auto()
     NORTH_EAST = auto()
@@ -21,6 +22,7 @@ class Action(Enum):
     LOOT = auto()
     UNTRAP = auto()
     PRAY = auto()
+
 
 KEY_ACTIONS = {
     Action.NORTH: 'k',
@@ -67,3 +69,27 @@ MOVE_ACTIONS = [
     Action.STAIR_DOWN,
     # Action.SEARCH
 ]
+
+map_act_int = {
+    Action.NORTH: 0,
+    Action.NORTH_EAST: 1,
+    Action.EAST: 2,
+    Action.SOUTH_EAST: 3,
+    Action.SOUTH: 4,
+    Action.SOUTH_WEST: 5,
+    Action.WEST: 6,
+    Action.NORTH_WEST: 7,
+    Action.STAIR_UP: 8,
+    Action.STAIR_DOWN: 9,
+    Action.MORE: 10,
+    Action.YES: 11,
+    Action.NO: 12,
+    Action.LOOT: 13,
+    Action.UNTRAP: 14,
+    Action.PRAY: 15,
+    Action.OPEN: 16,
+    Action.CLOSE: 17,
+    Action.SEARCH: 18,
+    Action.LOOK: 19,
+}
+print(map_act_int[MOVE_ACTIONS[0]])

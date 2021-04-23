@@ -2,6 +2,7 @@
 
 ROLE=valkyrie
 OPTIONS=race:dwarf
+OPTIONS=name:Nemes1s
 
 OPTIONS=!bones
 OPTIONS=lit_corridor
