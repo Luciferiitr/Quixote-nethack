@@ -207,7 +207,7 @@ class DQNLearningBot:
         self.epsilon = epsilon
         self.discount = discount
         self.state_act_counts = collections.defaultdict(int)
-        #self.Q = collections.defaultdict(float)
+        # self.Q = collections.defaultdict(float)
         self.Q = DeepQNetwork(1, 72)
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
@@ -294,6 +294,30 @@ class DQNLearningBot:
             self.optimizer.step()
             #self.Q[state_act_pair] = new_Q
 
+    def update_Q_replay_buffer(self, replay_buffer):
+        if len(replay_buffer) < replay_buffer.batch_size:
+            return
+        states, actions, rewards, next_states, dones = replay_buffer.sample()
+        state_action_tensors = []
+        for state, act in zip(states, actions):
+            state_action_tensors.append(
+                calculate_input_tensor(state, action, self.device))
+        state_action_values = self.Q(state_action_tensors)
+        next_state_values = []
+        for next_state in next_states:
+            state_value = 0
+            for new_act in action.MOVE_ACTIONS:
+                state_value = max(self.Q(calculate_input_tensor(
+                    next_state, new_act, self.device)), state_value)
+            next_state_values.append(state_value)
+
+        expected_state_action_values = (
+            next_state_values * self.discount) + rewards.float()
+        loss = F.smooth_l1_loss(state_action_values,
+                                expected_state_action_values.unsqueeze(1))
+        loss.backward()
+        self.optimizer.step()
+
     def modify_reward(self, reward, pos, level):
         if pos in self.prev_poses:
             reward -= 0.5
@@ -304,10 +328,14 @@ class DQNLearningBot:
             reward += 50 * (level - self.prev_level)
         return reward - 0.1
 
-    def choose_action(self, state):
+    def choose_action(self, state, replay_buffer):
         pos = self.find_self(state['map'])
         parsed_state = self.parse_state(state)
-        self.update_Q(parsed_state)
+        # self.update_Q(parsed_state)
+        if len(replay_buffer) >= replay_buffer.batch_size:
+            self.update_Q_replay_buffer(replay_buffer)
+        else:
+            self.update_Q(parsed_state)
 
         if state['message']['is_more']:
             act = action.Action.MORE
@@ -348,6 +376,7 @@ class DQNLearningBot:
         status = '{}\tEP:{}'.format(train_string, self.epoch)
 
         if self.prev_state is not None and self.prev_Q is not None:
+            print('both not none')
             status += '\tQ:{:.3f}\tR:{:.3f}\n\tST:{:018x}'.format(
                 self.Q(calculate_input_tensor(self.prev_state,
                                               self.prev_act, self.device)).data.cpu().numpy(),

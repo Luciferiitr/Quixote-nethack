@@ -81,6 +81,8 @@ map_act_int = {
     Action.NORTH_WEST: 7,
     Action.STAIR_UP: 8,
     Action.STAIR_DOWN: 9,
+}
+map_act_int2 = {
     Action.MORE: 10,
     Action.YES: 11,
     Action.NO: 12,
