@@ -301,7 +301,7 @@ class DQNLearningBot:
         state_action_tensors = []
         for state, act in zip(states, actions):
             state_action_tensors.append(
-                calculate_input_tensor(state, action, self.device))
+                calculate_input_tensor(state, act, self.device))
         state_action_values = self.Q(state_action_tensors)
         next_state_values = []
         for next_state in next_states:

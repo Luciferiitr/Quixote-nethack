@@ -81,6 +81,16 @@ map_act_int = {
     Action.NORTH_WEST: 7,
     Action.STAIR_UP: 8,
     Action.STAIR_DOWN: 9,
+    Action.MORE: 10,
+    Action.YES: 11,
+    Action.NO: 12,
+    Action.LOOT: 13,
+    Action.UNTRAP: 14,
+    Action.PRAY: 15,
+    Action.OPEN: 16,
+    Action.CLOSE: 17,
+    Action.SEARCH: 18,
+    Action.LOOK: 19,
 }
 map_act_int2 = {
     Action.MORE: 10,

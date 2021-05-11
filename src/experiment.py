@@ -52,10 +52,12 @@ class Experiment:
                     remaining = config.MOVE_DELAY - (time.time() - start_time)
                     if remaining > 0:
                         time.sleep(remaining)
+                    if self.exp_bot.prev_state and self.exp_bot.parse_state(state):
+                        self.replay_buffer.add(self.exp_bot.prev_state, self.exp_bot.prev_act,
+                                               self.exp_bot.prev_reward, self.exp_bot.parse_state(state), False)
+                if self.exp_bot.prev_state and self.exp_bot.parse_state(state):
                     self.replay_buffer.add(self.exp_bot.prev_state, self.exp_bot.prev_act,
-                                           self.exp_bot.prev_reward, self.exp_bot.parse_state(state), False)
-                self.replay_buffer.add(self.exp_bot.prev_state, self.exp_bot.prev_act,
-                                       self.exp_bot.prev_reward, self.exp_bot.parse_state(state), True)
+                                           self.exp_bot.prev_reward, self.exp_bot.parse_state(state), True)
                 if verbose:
                     tqdm.write('Epoch {}: {}'.format(epoch, state['score']))
                     pbar.close()
