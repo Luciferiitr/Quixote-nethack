@@ -248,7 +248,7 @@ class DQNLearningBot:
         if replaced_map != self.prev_map:
             self.prev_discovered = True
 
-    def parse_state(self, state):
+    def parse_state(self, state, update = True):
         pos = self.find_self(state['map'])
         if pos is None or self.prev_map is None:
             parsed = None
@@ -264,8 +264,8 @@ class DQNLearningBot:
             for dx in (-1, 0, 1):
                 for dy in (-1, 0, 1):
                     parsed.append((x + dx, y + dy) in self.prev_poses)
-
-        self.update_prev_map(state['map'])
+        if update:
+            self.update_prev_map(state['map'])
         if parsed is None:
             return None
         binary_rep = ''.join(['1' if part else '0' for part in parsed])
@@ -298,11 +298,10 @@ class DQNLearningBot:
         if len(replay_buffer) < replay_buffer.batch_size:
             return
         states, actions, rewards, next_states, dones = replay_buffer.sample()
-        state_action_tensors = []
+        state_action_values = []
         for state, act in zip(states, actions):
-            state_action_tensors.append(
-                calculate_input_tensor(state, act, self.device))
-        state_action_values = self.Q(state_action_tensors)
+            state_action_values.append(self.Q(calculate_input_tensor(state, act, self.device)))
+        state_action_values = torch.Tensor(state_action_values)
         next_state_values = []
         for next_state in next_states:
             state_value = 0
@@ -310,9 +309,9 @@ class DQNLearningBot:
                 state_value = max(self.Q(calculate_input_tensor(
                     next_state, new_act, self.device)), state_value)
             next_state_values.append(state_value)
-
+        next_state_values = torch.Tensor(next_state_values)
         expected_state_action_values = (
-            next_state_values * self.discount) + rewards.float()
+            next_state_values * self.discount) + torch.Tensor(rewards)
         loss = F.smooth_l1_loss(state_action_values,
                                 expected_state_action_values.unsqueeze(1))
         loss.backward()

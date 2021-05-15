@@ -47,21 +47,25 @@ class Experiment:
                         break
                     act = self.exp_bot.choose_action(state, self.replay_buffer)
                     self.exp_game.do_action(act)
+                    new_state = self.exp_bot.parse_state(self.exp_game.get_state(), update=False)
                     if verbose:
                         pbar.update(1)
                     remaining = config.MOVE_DELAY - (time.time() - start_time)
                     if remaining > 0:
                         time.sleep(remaining)
-                    if self.exp_bot.prev_state and self.exp_bot.parse_state(state):
+                    if self.exp_bot.prev_state != new_state:   
+                        print(self.exp_bot.prev_state, new_state)
+                    if self.exp_bot.prev_state and new_state:
                         self.replay_buffer.add(self.exp_bot.prev_state, self.exp_bot.prev_act,
-                                               self.exp_bot.prev_reward, self.exp_bot.parse_state(state), False)
-                if self.exp_bot.prev_state and self.exp_bot.parse_state(state):
+                                               self.exp_bot.prev_reward, new_state, False)
+                if self.exp_bot.prev_state and new_state:
                     self.replay_buffer.add(self.exp_bot.prev_state, self.exp_bot.prev_act,
-                                           self.exp_bot.prev_reward, self.exp_bot.parse_state(state), True)
+                                           self.exp_bot.prev_reward, new_state, True)
                 if verbose:
                     tqdm.write('Epoch {}: {}'.format(epoch, state['score']))
                     pbar.close()
                 self.history.append(state['score'])
+                print(self.history)
                 end_states.append(state)
         except Exception as e:
             raise e
