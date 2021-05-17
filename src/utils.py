@@ -3,14 +3,11 @@ import action
 import numpy as np
 
 
-def calculate_input_tensor(binary_state, act, device):
+def calculate_input_tensor(binary_state, device):
     state = decimal_to_binary_state(binary_state)
     state = torch.tensor(state)
-    act_num = action.map_act_int[act]
-    act_num = torch.tensor([[act_num]], dtype=float)
-    state_action_tensor = torch.cat([state, act_num], axis=1)
-    # print(state_action_tensor.to(device))
-    return state_action_tensor.to(device).float()
+    print('calculate_input_tensor ', state.shape)
+    return state.to(device).float()
 
 
 def decimal_to_binary_state(a, num_elements=72):

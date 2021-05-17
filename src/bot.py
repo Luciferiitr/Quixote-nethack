@@ -14,8 +14,7 @@ from utils import calculate_input_tensor, decimal_to_binary_state
 class DeepQNetwork(nn.Module):
     def __init__(self, action_space_shape, num_in_features, intermediate_features_shape=256):
         super(DeepQNetwork, self).__init__()
-        self.fc_1 = nn.Linear(action_space_shape +
-                              num_in_features, intermediate_features_shape)
+        self.fc_1 = nn.Linear(num_in_features, intermediate_features_shape)
         self.fc_2 = nn.Linear(intermediate_features_shape,
                               intermediate_features_shape)
         self.fc_3 = nn.Linear(intermediate_features_shape,
@@ -23,7 +22,7 @@ class DeepQNetwork(nn.Module):
         self.fc_4 = nn.Linear(intermediate_features_shape,
                               intermediate_features_shape)
         self.dropout_layer = nn.Dropout(0.5)
-        self.output_layer = nn.Linear(intermediate_features_shape, 1)
+        self.output_layer = nn.Linear(intermediate_features_shape, action_space_shape)
 
     def forward(self, x):
         out = self.fc_1(x)
@@ -208,7 +207,7 @@ class DQNLearningBot:
         self.discount = discount
         self.state_act_counts = collections.defaultdict(int)
         # self.Q = collections.defaultdict(float)
-        self.Q = DeepQNetwork(1, 72)
+        self.Q = DeepQNetwork(20, 72)
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
         self.Q = self.Q.to(self.device)
@@ -281,10 +280,9 @@ class DQNLearningBot:
             self.optimizer.zero_grad()
 
             self.prev_Q = self.Q(calculate_input_tensor(
-                self.prev_state, self.prev_act, self.device))  # Q(s,a)
-
-            max_Q = max([self.Q(calculate_input_tensor(parsed_state, act, self.device))
-                         for act in action.MOVE_ACTIONS])
+                self.prev_state, self.device))[0, action.map_act_int[self.prev_act]].view(1,1)  # Q(s,a)
+            print("self.Q(calculate_input_tensor(next_states, self.device)).max(1) ", self.Q(calculate_input_tensor(parsed_state, self.device)).max(1)[0].shape)
+            max_Q = self.Q(calculate_input_tensor(parsed_state, self.device)).max(1)[0].detach().view(1,1)
             # new_Q = (1 - state_act_lr) * self.prev_Q
             # new_Q += state_act_lr * (self.prev_reward + self.discount * max_Q)
             # print('hiiiiiiiiiiii ', self.prev_Q, max_Q)
@@ -297,23 +295,17 @@ class DQNLearningBot:
     def update_Q_replay_buffer(self, replay_buffer):
         if len(replay_buffer) < replay_buffer.batch_size:
             return
+        print("fucking inside xd xd xd xd xd xd xd xd xd xd xd")
         states, actions, rewards, next_states, dones = replay_buffer.sample()
-        state_action_values = []
-        for state, act in zip(states, actions):
-            state_action_values.append(self.Q(calculate_input_tensor(state, act, self.device)))
-        state_action_values = torch.Tensor(state_action_values)
-        next_state_values = []
-        for next_state in next_states:
-            state_value = 0
-            for new_act in action.MOVE_ACTIONS:
-                state_value = max(self.Q(calculate_input_tensor(
-                    next_state, new_act, self.device)), state_value)
-            next_state_values.append(state_value)
-        next_state_values = torch.Tensor(next_state_values)
+        state_action_values = self.Q(states).gather(1, actions).view(4,1) #(4,1)
+        print('state_action_values ' ,state_action_values.shape)
+        next_state_values = self.Q(next_states).max(1)[0].detach().view(4,1)
+        print('next state values  ', next_state_values.shape)
         expected_state_action_values = (
-            next_state_values * self.discount) + torch.Tensor(rewards)
+            next_state_values * self.discount) + rewards.float()
         loss = F.smooth_l1_loss(state_action_values,
-                                expected_state_action_values.unsqueeze(1))
+                                expected_state_action_values)
+        self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
@@ -353,8 +345,11 @@ class DQNLearningBot:
                 best_Q = None
                 # print(action.MOVE_ACTIONS)
                 for new_act in action.MOVE_ACTIONS:
+                    print(calculate_input_tensor(parsed_state, self.device).shape)
                     new_Q = self.Q(calculate_input_tensor(
-                        parsed_state, new_act, self.device))
+                        parsed_state, self.device))
+                    print("new Q shape", new_Q.shape)
+                    new_Q = new_Q[0, action.map_act_int[new_act]].view(1)
 
                     if best_Q is None or new_Q > best_Q:
                         best_actions = [new_act]
@@ -362,6 +357,7 @@ class DQNLearningBot:
                     elif new_Q == best_Q:
                         best_actions.append(new_act)
                 act = random.choice(best_actions)
+                # act = self.Q(calculate_input_tensor(parsed_state, self.device)).argmax()
         self.prev_state = parsed_state
         self.prev_act = act
         level = state['Dlvl'] if 'Dlvl' in state else None
@@ -377,8 +373,7 @@ class DQNLearningBot:
         if self.prev_state is not None and self.prev_Q is not None:
             print('both not none')
             status += '\tQ:{:.3f}\tR:{:.3f}\n\tST:{:018x}'.format(
-                self.Q(calculate_input_tensor(self.prev_state,
-                                              self.prev_act, self.device)).data.cpu().numpy(),
+                self.Q(calculate_input_tensor(self.prev_state, self.device))[0,action.map_act_int[self.prev_act]].data.cpu().numpy(),
                 self.prev_reward, self.prev_state)
         status += '\n'
         if self.beneath is not None:

@@ -2,6 +2,7 @@ import torch
 from collections import deque, namedtuple
 import random
 import numpy as np
+from utils import calculate_input_tensor
 device = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu")
 
@@ -45,11 +46,12 @@ class ReplayBuffer:
         # dones = torch.from_numpy(np.vstack(
         #     [e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
 
-        states = [e.state for e in experiences]
+        states = torch.stack([calculate_input_tensor(e.state, device) for e in experiences])
+        # actions = torch.stack([torch.Tensor([e.action]) for e in experiences])
         actions = [e.action for e in experiences]
-        rewards = [e.reward for e in experiences]
-        next_states = [e.next_state for e in experiences]
-        dones = [e.done for e in experiences]
+        rewards = torch.stack([torch.Tensor([e.reward]) for e in experiences])
+        next_states = torch.stack([calculate_input_tensor(e.next_state, device) for e in experiences])
+        dones = torch.stack([torch.Tensor([e.done]) for e in experiences])
 
         return (states, actions, rewards, next_states, dones)
 

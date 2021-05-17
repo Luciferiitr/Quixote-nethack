@@ -4,6 +4,7 @@ from tqdm import tqdm
 from replay_buffer import ReplayBuffer
 
 import config
+import action
 
 
 class Experiment:
@@ -56,10 +57,10 @@ class Experiment:
                     if self.exp_bot.prev_state != new_state:   
                         print(self.exp_bot.prev_state, new_state)
                     if self.exp_bot.prev_state and new_state:
-                        self.replay_buffer.add(self.exp_bot.prev_state, self.exp_bot.prev_act,
+                        self.replay_buffer.add(self.exp_bot.prev_state, action.map_act_int[self.exp_bot.prev_act],
                                                self.exp_bot.prev_reward, new_state, False)
                 if self.exp_bot.prev_state and new_state:
-                    self.replay_buffer.add(self.exp_bot.prev_state, self.exp_bot.prev_act,
+                    self.replay_buffer.add(self.exp_bot.prev_state, action.map_act_int[self.exp_bot.prev_act],
                                            self.exp_bot.prev_reward, new_state, True)
                 if verbose:
                     tqdm.write('Epoch {}: {}'.format(epoch, state['score']))
