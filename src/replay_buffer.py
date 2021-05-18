@@ -46,12 +46,12 @@ class ReplayBuffer:
         # dones = torch.from_numpy(np.vstack(
         #     [e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
 
-        states = torch.stack([calculate_input_tensor(e.state, device) for e in experiences])
+        states = torch.cat([calculate_input_tensor(e.state, device) for e in experiences])
         # actions = torch.stack([torch.Tensor([e.action]) for e in experiences])
-        actions = [e.action for e in experiences]
-        rewards = torch.stack([torch.Tensor([e.reward]) for e in experiences])
-        next_states = torch.stack([calculate_input_tensor(e.next_state, device) for e in experiences])
-        dones = torch.stack([torch.Tensor([e.done]) for e in experiences])
+        actions = torch.stack([torch.tensor([e.action], dtype = torch.int64).to(device) for e in experiences])
+        rewards = torch.stack([torch.Tensor([e.reward]).to(device) for e in experiences])
+        next_states = torch.cat([calculate_input_tensor(e.next_state, device) for e in experiences])
+        dones = torch.stack([torch.Tensor([e.done]).to(device) for e in experiences])
 
         return (states, actions, rewards, next_states, dones)
 

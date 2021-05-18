@@ -54,8 +54,8 @@ class Experiment:
                     remaining = config.MOVE_DELAY - (time.time() - start_time)
                     if remaining > 0:
                         time.sleep(remaining)
-                    if self.exp_bot.prev_state != new_state:   
-                        print(self.exp_bot.prev_state, new_state)
+                    # if self.exp_bot.prev_state != new_state:   
+                    #     print(self.exp_bot.prev_state, new_state)
                     if self.exp_bot.prev_state and new_state:
                         self.replay_buffer.add(self.exp_bot.prev_state, action.map_act_int[self.exp_bot.prev_act],
                                                self.exp_bot.prev_reward, new_state, False)

@@ -295,12 +295,11 @@ class DQNLearningBot:
     def update_Q_replay_buffer(self, replay_buffer):
         if len(replay_buffer) < replay_buffer.batch_size:
             return
-        print("fucking inside xd xd xd xd xd xd xd xd xd xd xd")
         states, actions, rewards, next_states, dones = replay_buffer.sample()
         state_action_values = self.Q(states).gather(1, actions).view(4,1) #(4,1)
-        print('state_action_values ' ,state_action_values.shape)
+        # print('state_action_values ' ,state_action_values.shape)
         next_state_values = self.Q(next_states).max(1)[0].detach().view(4,1)
-        print('next state values  ', next_state_values.shape)
+        # print('next state values  ', next_state_values.shape)
         expected_state_action_values = (
             next_state_values * self.discount) + rewards.float()
         loss = F.smooth_l1_loss(state_action_values,
@@ -345,10 +344,10 @@ class DQNLearningBot:
                 best_Q = None
                 # print(action.MOVE_ACTIONS)
                 for new_act in action.MOVE_ACTIONS:
-                    print(calculate_input_tensor(parsed_state, self.device).shape)
+                    # print(calculate_input_tensor(parsed_state, self.device).shape)
                     new_Q = self.Q(calculate_input_tensor(
                         parsed_state, self.device))
-                    print("new Q shape", new_Q.shape)
+                    # print("new Q shape", new_Q.shape)
                     new_Q = new_Q[0, action.map_act_int[new_act]].view(1)
 
                     if best_Q is None or new_Q > best_Q:
