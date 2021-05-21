@@ -6,7 +6,7 @@ import numpy as np
 def calculate_input_tensor(binary_state, device):
     state = decimal_to_binary_state(binary_state)
     state = torch.tensor(state)
-    print('calculate_input_tensor ', state.shape)
+    # print('calculate_input_tensor ', state.shape)
     return state.to(device).float()
 
 

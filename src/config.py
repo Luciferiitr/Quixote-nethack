@@ -2,8 +2,8 @@ import os
 
 curr_dir = os.getcwd()
 
-COMMAND = curr_dir + '/Quixote-nethack/bin/nethack'
-OPTIONS_FILE = curr_dir + '/Quixote-nethack/quixote.nethackrc'
+COMMAND = curr_dir + '/../bin/nethack'
+OPTIONS_FILE = curr_dir + '/../quixote.nethackrc'
 
 WIDTH, HEIGHT = 80, 24
 READ_TIMEOUT = 0.001

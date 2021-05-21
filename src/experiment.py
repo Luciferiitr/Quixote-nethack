@@ -15,8 +15,9 @@ class Experiment:
         self.history = []
         self.replay_buffer = ReplayBuffer(
             action_size=20, buffer_size=2000, batch_size=config.Batch_size, seed=2323)
+        self.num_iters = 0
 
-    def run(self, verbose=False, show=False, epochs=10, train=True):
+    def run(self, verbose=False, show=False, epochs=10, train=True, scheduling=True):
         if verbose and show:
             raise ValueError(
                 'Experiment can either be run in verbose or show mode')
@@ -33,6 +34,10 @@ class Experiment:
                 if verbose:
                     pbar = tqdm()
                 while True:
+                    self.num_iters += 1
+                    if self.num_iters % 10000 == 0 and scheduling:
+                        self.exp_bot.epsilon = min(
+                            0.05, self.exp_bot.epsilon - (self.num_iters // 10000) * 0.1)
                     start_time = time.time()
                     if show:
                         game_screen = self.exp_game.get_screen()
@@ -47,14 +52,19 @@ class Experiment:
                     if not self.exp_game.running:
                         break
                     act = self.exp_bot.choose_action(state, self.replay_buffer)
+                    # act = self.exp_bot.choose_action(state)
+                    if act == -1:
+                        self.exp_game.quit()
+                        break
                     self.exp_game.do_action(act)
-                    new_state = self.exp_bot.parse_state(self.exp_game.get_state(), update=False)
+                    new_state = self.exp_bot.parse_state(
+                        self.exp_game.get_state(), update=False)
                     if verbose:
                         pbar.update(1)
                     remaining = config.MOVE_DELAY - (time.time() - start_time)
                     if remaining > 0:
                         time.sleep(remaining)
-                    # if self.exp_bot.prev_state != new_state:   
+                    # if self.exp_bot.prev_state != new_state:
                     #     print(self.exp_bot.prev_state, new_state)
                     if self.exp_bot.prev_state and new_state:
                         self.replay_buffer.add(self.exp_bot.prev_state, action.map_act_int[self.exp_bot.prev_act],

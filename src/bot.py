@@ -22,7 +22,8 @@ class DeepQNetwork(nn.Module):
         self.fc_4 = nn.Linear(intermediate_features_shape,
                               intermediate_features_shape)
         self.dropout_layer = nn.Dropout(0.5)
-        self.output_layer = nn.Linear(intermediate_features_shape, action_space_shape)
+        self.output_layer = nn.Linear(
+            intermediate_features_shape, action_space_shape)
 
     def forward(self, x):
         out = self.fc_1(x)
@@ -192,7 +193,7 @@ class QLearningBot:
 class DQNLearningBot:
     PATTERNS = [string.ascii_letters, '+', '>', '-', '|', ' ', '#']
 
-    def __init__(self, lr=0.001, epsilon=0.1, discount=0.6):
+    def __init__(self, lr=0.001, epsilon=0.9, discount=0.6):
         self.prev_state = None
         self.prev_act = None
         self.prev_reward = None
@@ -247,7 +248,7 @@ class DQNLearningBot:
         if replaced_map != self.prev_map:
             self.prev_discovered = True
 
-    def parse_state(self, state, update = True):
+    def parse_state(self, state, update=True):
         pos = self.find_self(state['map'])
         if pos is None or self.prev_map is None:
             parsed = None
@@ -280,9 +281,10 @@ class DQNLearningBot:
             self.optimizer.zero_grad()
 
             self.prev_Q = self.Q(calculate_input_tensor(
-                self.prev_state, self.device))[0, action.map_act_int[self.prev_act]].view(1,1)  # Q(s,a)
-            print("self.Q(calculate_input_tensor(next_states, self.device)).max(1) ", self.Q(calculate_input_tensor(parsed_state, self.device)).max(1)[0].shape)
-            max_Q = self.Q(calculate_input_tensor(parsed_state, self.device)).max(1)[0].detach().view(1,1)
+                self.prev_state, self.device))[0, action.map_act_int[self.prev_act]].view(1, 1)  # Q(s,a)
+            # print("self.Q(calculate_input_tensor(next_states, self.device)).max(1) ", self.Q(calculate_input_tensor(parsed_state, self.device)).max(1)[0].shape)
+            max_Q = self.Q(calculate_input_tensor(parsed_state, self.device)).max(1)[
+                0].detach().view(1, 1)
             # new_Q = (1 - state_act_lr) * self.prev_Q
             # new_Q += state_act_lr * (self.prev_reward + self.discount * max_Q)
             # print('hiiiiiiiiiiii ', self.prev_Q, max_Q)
@@ -296,9 +298,10 @@ class DQNLearningBot:
         if len(replay_buffer) < replay_buffer.batch_size:
             return
         states, actions, rewards, next_states, dones = replay_buffer.sample()
-        state_action_values = self.Q(states).gather(1, actions).view(4,1) #(4,1)
+        state_action_values = self.Q(states).gather(
+            1, actions).view(4, 1)  # (4,1)
         # print('state_action_values ' ,state_action_values.shape)
-        next_state_values = self.Q(next_states).max(1)[0].detach().view(4,1)
+        next_state_values = self.Q(next_states).max(1)[0].detach().view(4, 1)
         # print('next state values  ', next_state_values.shape)
         expected_state_action_values = (
             next_state_values * self.discount) + rewards.float()
@@ -337,6 +340,7 @@ class DQNLearningBot:
             if parsed_state is None:
                 print(self.prev_map)
                 print(state['map'])
+                return -1
             if random.random() < self.epsilon:
                 act = random.choice(action.MOVE_ACTIONS)
             else:
@@ -372,15 +376,18 @@ class DQNLearningBot:
         if self.prev_state is not None and self.prev_Q is not None:
             print('both not none')
             status += '\tQ:{:.3f}\tR:{:.3f}\n\tST:{:018x}'.format(
-                self.Q(calculate_input_tensor(self.prev_state, self.device))[0,action.map_act_int[self.prev_act]].data.cpu().numpy(),
+                self.Q(calculate_input_tensor(self.prev_state, self.device))[
+                    0, action.map_act_int[self.prev_act]].data.cpu().numpy(),
                 self.prev_reward, self.prev_state)
-        status += '\n'
-        if self.beneath is not None:
-            status += '\tBN:{}'.format(self.beneath)
-        if self.prev_act is not None:
-            status += '\t{}'.format(self.prev_act)
-        status += '\n'
-        for act in action.MOVE_ACTIONS:
-            status += '\n\t{}:{:.3f}'.format(act.name,
-                                             self.Q(calculate_input_tensor(self.prev_state, act, self.device)))
+        if self.prev_state is not None:
+            status += '\n'
+            if self.beneath is not None:
+                status += '\tBN:{}'.format(self.beneath)
+            if self.prev_act is not None:
+                status += '\t{}'.format(self.prev_act)
+            status += '\n'
+            for act in action.MOVE_ACTIONS:
+                status += '\n\t{}:{:.3f}'.format(act.name,
+                                                 self.Q(calculate_input_tensor(self.prev_state, self.device))[
+                                                     0, action.map_act_int[act]].data.cpu().numpy())
         return status
