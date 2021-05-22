@@ -17,7 +17,7 @@ class Game:
     def start(self):
         env = os.environ
         env['NETHACKOPTIONS'] = '@{}'.format(config.OPTIONS_FILE)
-        print('@{}'.format(config.OPTIONS_FILE))
+        # print('@{}'.format(config.OPTIONS_FILE))
         self.child = pexpect.spawn(config.COMMAND, env=env)
         self.screen = pyte.Screen(config.WIDTH, config.HEIGHT)
         self.stream = pyte.Stream(self.screen)

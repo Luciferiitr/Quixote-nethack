@@ -193,7 +193,7 @@ class QLearningBot:
 class DQNLearningBot:
     PATTERNS = [string.ascii_letters, '+', '>', '-', '|', ' ', '#']
 
-    def __init__(self, lr=0.001, epsilon=0.9, discount=0.6):
+    def __init__(self, lr=0.001, epsilon=0.1, discount=0.6):
         self.prev_state = None
         self.prev_act = None
         self.prev_reward = None
@@ -209,9 +209,11 @@ class DQNLearningBot:
         self.state_act_counts = collections.defaultdict(int)
         # self.Q = collections.defaultdict(float)
         self.Q = DeepQNetwork(20, 72)
+        self.Q_target = DeepQNetwork(20, 72)
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
         self.Q = self.Q.to(self.device)
+        self.Q_target = self.Q_target.to(self.device)
         self.criterion = torch.nn.MSELoss(reduction='mean')
         self.optimizer = torch.optim.Adam(self.Q.parameters(), lr=lr)
 
@@ -301,7 +303,8 @@ class DQNLearningBot:
         state_action_values = self.Q(states).gather(
             1, actions).view(4, 1)  # (4,1)
         # print('state_action_values ' ,state_action_values.shape)
-        next_state_values = self.Q(next_states).max(1)[0].detach().view(4, 1)
+        next_state_values = self.Q_target(next_states).max(1)[
+            0].detach().view(4, 1)
         # print('next state values  ', next_state_values.shape)
         expected_state_action_values = (
             next_state_values * self.discount) + rewards.float()

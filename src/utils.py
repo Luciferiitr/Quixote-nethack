@@ -1,6 +1,8 @@
 import torch
 import action
+import torch.nn as nn
 import numpy as np
+from config import SAVE_EPOCH, PATH, REWARD_FILE
 
 
 def calculate_input_tensor(binary_state, device):
@@ -29,4 +31,31 @@ def decimal_to_binary_state(a, num_elements=72):
     return final_state
 
 
-# print(type(decimal_to_binary_state(52)))
+def get_model_name(root_dir_path, epoch):
+    curr_name = "saved_checkpoint_" + str(epoch)
+    return curr_name
+
+
+def save_model(model, epoch, path=PATH, save_dict_only=True):
+    if epoch % SAVE_EPOCH == 0:
+        # print("saving the model")
+        if not save_dict_only:
+            torch.save(model, path)
+        else:
+            torch.save(model.state_dict(), path)
+
+
+def load_model(model_1, path=PATH, save_dict_only=True):
+    print('Loading model ................... ')
+    if not save_dict_only:
+        model = torch.load(path)
+        return model
+    else:
+        model_1.load_state_dict(torch.load(path))
+        return model_1
+
+
+def save_rewards(reward_list, file_name=REWARD_FILE):
+    curr_new = np.array(reward_list)
+    curr_file = file_name + ".npy"
+    np.save(curr_file, curr_new)

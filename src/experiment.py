@@ -1,10 +1,12 @@
 import time
+from torch.serialization import load
 
 from tqdm import tqdm
 from replay_buffer import ReplayBuffer
 
 import config
 import action
+from utils import save_model, load_model, save_rewards
 
 
 class Experiment:
@@ -25,6 +27,8 @@ class Experiment:
         end_states = []
         try:
             epoch_iter = tqdm(range(epochs)) if verbose else range(epochs)
+            if config.LOAD_MODEL:
+                self.exp_bot.Q = load_model(self.exp_bot.Q)
             for epoch in epoch_iter:
                 self.exp_bot.epoch = epoch
                 self.exp_bot.train = train
@@ -33,6 +37,10 @@ class Experiment:
                     self.exp_display.start()
                 if verbose:
                     pbar = tqdm()
+                save_model(self.exp_bot.Q, epoch)
+                if epoch % config.TARGET_UPDATE == 0:
+                    self.exp_bot.Q_target.load_state_dict(
+                        self.exp_bot.Q.state_dict())
                 while True:
                     self.num_iters += 1
                     if self.num_iters % 10000 == 0 and scheduling:
@@ -76,7 +84,7 @@ class Experiment:
                     tqdm.write('Epoch {}: {}'.format(epoch, state['score']))
                     pbar.close()
                 self.history.append(state['score'])
-                print(self.history)
+                save_rewards(self.history)
                 end_states.append(state)
         except Exception as e:
             raise e
