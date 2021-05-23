@@ -28,7 +28,8 @@ class Experiment:
         try:
             epoch_iter = tqdm(range(epochs)) if verbose else range(epochs)
             if config.LOAD_MODEL:
-                self.exp_bot.Q = load_model(self.exp_bot.Q)
+                self.exp_bot.Q, self.exp_bot.epsilon = load_model(
+                    self.exp_bot.Q)
             for epoch in epoch_iter:
                 self.exp_bot.epoch = epoch
                 self.exp_bot.train = train
@@ -37,7 +38,7 @@ class Experiment:
                     self.exp_display.start()
                 if verbose:
                     pbar = tqdm()
-                save_model(self.exp_bot.Q, epoch)
+                save_model(self.exp_bot.Q, epoch, self.exp_bot.epsilon)
                 if epoch % config.TARGET_UPDATE == 0:
                     self.exp_bot.Q_target.load_state_dict(
                         self.exp_bot.Q.state_dict())

@@ -2,7 +2,7 @@ import torch
 import action
 import torch.nn as nn
 import numpy as np
-from config import SAVE_EPOCH, PATH, REWARD_FILE
+from config import SAVE_EPOCH, PATH, REWARD_FILE, EPSILON_FILE
 
 
 def calculate_input_tensor(binary_state, device):
@@ -36,9 +36,11 @@ def get_model_name(root_dir_path, epoch):
     return curr_name
 
 
-def save_model(model, epoch, path=PATH, save_dict_only=True):
+def save_model(model, epoch, epsilon, path=PATH, save_dict_only=True):
     if epoch % SAVE_EPOCH == 0:
         # print("saving the model")
+        f = open(EPSILON_FILE, 'w')
+        f.write(str(epsilon))
         if not save_dict_only:
             torch.save(model, path)
         else:
@@ -52,7 +54,10 @@ def load_model(model_1, path=PATH, save_dict_only=True):
         return model
     else:
         model_1.load_state_dict(torch.load(path))
-        return model_1
+        curr_epsilon_file = open(EPSILON_FILE)
+        str_epsilon_list = curr_epsilon_file.readlines()
+        epsilon = float(str_epsilon_list[0])
+        return model_1, epsilon
 
 
 def save_rewards(reward_list, file_name=REWARD_FILE):
