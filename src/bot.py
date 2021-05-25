@@ -193,7 +193,7 @@ class QLearningBot:
 class DQNLearningBot:
     PATTERNS = [string.ascii_letters, '+', '>', '-', '|', ' ', '#']
 
-    def __init__(self, lr=0.001, epsilon=0.1, discount=0.6):
+    def __init__(self, lr=0.001, epsilon=0.9, discount=0.6):
         self.prev_state = None
         self.prev_act = None
         self.prev_reward = None
@@ -279,9 +279,7 @@ class DQNLearningBot:
         # / float(self.state_act_counts[state_act_pair])
         state_act_lr = self.lr
         if self.prev_state is not None and parsed_state is not None:
-            #self.prev_Q = self.Q[state_act_pair]
-            self.optimizer.zero_grad()
-
+            # self.prev_Q = self.Q[sTrue
             self.prev_Q = self.Q(calculate_input_tensor(
                 self.prev_state, self.device))[0, action.map_act_int[self.prev_act]].view(1, 1)  # Q(s,a)
             # print("self.Q(calculate_input_tensor(next_states, self.device)).max(1) ", self.Q(calculate_input_tensor(parsed_state, self.device)).max(1)[0].shape)

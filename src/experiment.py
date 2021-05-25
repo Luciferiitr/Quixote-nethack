@@ -42,11 +42,13 @@ class Experiment:
                 if epoch % config.TARGET_UPDATE == 0:
                     self.exp_bot.Q_target.load_state_dict(
                         self.exp_bot.Q.state_dict())
+                count = 0
                 while True:
+                    count += 1
                     self.num_iters += 1
-                    if self.num_iters % 10000 == 0 and scheduling:
-                        self.exp_bot.epsilon = min(
-                            0.05, self.exp_bot.epsilon - (self.num_iters // 10000) * 0.1)
+                    if self.num_iters % 50000 == 0 and scheduling:
+                        self.exp_bot.epsilon = max(
+                            0.1, self.exp_bot.epsilon - (self.num_iters // 50000) * 0.1)
                     start_time = time.time()
                     if show:
                         game_screen = self.exp_game.get_screen()
@@ -59,6 +61,9 @@ class Experiment:
                             continue
                     state = self.exp_game.get_state()
                     if not self.exp_game.running:
+                        break
+                    if count == 15000:
+                        self.exp_game.quit()
                         break
                     act = self.exp_bot.choose_action(state, self.replay_buffer)
                     # act = self.exp_bot.choose_action(state)

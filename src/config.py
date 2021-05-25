@@ -11,12 +11,12 @@ WIDTH, HEIGHT = 80, 24
 READ_TIMEOUT = 0.001
 MOVE_DELAY = 0
 Batch_size = 4
-SAVE_EPOCH = 10
-PATH = curr_dir + '/../logs/checkpoint'
+SAVE_EPOCH = 1
+TARGET_UPDATE = 5
 LOAD_MODEL = False
 REWARD_FILE = curr_dir + '/../logs/scores' + str(datetime.datetime.now())
 EPSILON_FILE = curr_dir + '/../logs/epsilon.txt'
-TARGET_UPDATE = 5
+PATH = curr_dir + '/../logs/checkpoint'
 
 #############################   COLAB   ########################################
 
